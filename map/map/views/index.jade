@@ -7,7 +7,5 @@ block content
         div(style='float: left; width: 100px; border-right: 1px solid black; height: 300px; padding: 10px; overflow: scroll-y;')
           b ROOMS
           #rooms
-        div(style='float: left; width: 300px; height: 250px; overflow: scroll-y; padding: 10px;')
-          #conversation
-          input#data(style='width: 200px;')
-          input#datasend(type='button', value='send')
+        img#map-image(src='/images/Mapa_2.svg', alt='map')
+        canvas#map-canvas(width='800', height='500')

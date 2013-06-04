@@ -1,30 +1,40 @@
-var socket = io.connect('http://localhost:3001');
+var socket = io.connect('http://localhost:3000');
 // on connection to server, ask for user's name with an anonymous callback
 socket.on('connect', function () {
-    // call the server-side function 'adduser' and send one parameter (value of prompt)
-    socket.emit('adduser', prompt("What's your name?"));
+    socket.emit('getRooms');
 });
+
 // listener, whenever the server emits 'updatechat', this updates the chat body
 socket.on('updatechat', function (username, data) {
     $('#conversation').append('<b>' + username + ':</b> ' + data + '<br>');
 });
-// listener, whenever the server emits 'updaterooms', this updates the room the client is in
-socket.on('updaterooms', function (rooms, current_room) {
+
+socket.on('setRooms', function (rooms) {
     $('#rooms').empty();
     $.each(rooms, function (key, value) {
-        if (value == current_room) {
-            $('#rooms').append('<div>' + value + '</div>');
-        }
-        else {
-            var str = '<div><a href="#" onclick="switchRoom(\''+value+'\')">' + value + '</a></div>'
-            $('#rooms').append(str);
-        }
+        var str = '<div class="room" id="' + key + '">' + key + ' [' + value + ']' + '</div>'
+        $('#rooms').append(str);
+    });
+    $('.room').on('click', function (event) {
+        var name = prompt("What's your name?")
+        socket.emit('adduser', {room: this.id, name: name});
     });
 });
 
-function switchRoom(room) {
-    socket.emit('switchRoom', room);
-}
+socket.on('updateRooms', function (rooms) {
+    var links = $('#rooms').children();
+    for(var i = 0; i < links.length; i += 1){
+        var tmp = links[i];
+        tmp.textContent = tmp.textContent.replace(/\[\d\]/, '[' + rooms[tmp.id] + ']');
+    }
+});
+
+socket.on('startGame', function(){
+    var ctx, img, c=$("#map-canvas")[0];
+    ctx=c.getContext("2d");
+    img=$("#map-image")[0];
+    ctx.drawImage(img, 0, 0, 500, 500);
+});
 
 // on load of page
 $(function () {
@@ -35,6 +45,7 @@ $(function () {
         // tell server to execute 'sendchat' and send along one parameter
         socket.emit('sendchat', message);
     });
+
     // when the client hits ENTER on their keyboard
     $('#data').keypress(function (e) {
         if (e.which == 13) {
