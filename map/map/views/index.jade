@@ -4,8 +4,12 @@ block content
   h1= title
   p Welcome to #{title}
 
-        div(style='float: left; width: 100px; border-right: 1px solid black; height: 300px; padding: 10px; overflow: scroll-y;')
-          b ROOMS
-          #rooms
+
+      div#players-list(style='float: right; width: 100px; border-right: 1px solid black; height: 300px; padding: 10px; overflow: scroll-y;')
+        b PLAYERS
+
+      div#rooms-list(style='float: left; width: 100px; border-right: 1px solid black; height: 300px; padding: 10px; overflow: scroll-y;')
+        b ROOMS
+        #rooms
         img#map-image(src='/images/Mapa_2.svg', alt='map')
-        canvas#map-canvas(width='800', height='500')
+      canvas#map-canvas(width='800', height='500')

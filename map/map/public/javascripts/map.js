@@ -29,11 +29,20 @@ socket.on('updateRooms', function (rooms) {
     }
 });
 
-socket.on('startGame', function(){
+socket.on('startGame', function(players){
     var ctx, img, c=$("#map-canvas")[0];
     ctx=c.getContext("2d");
     img=$("#map-image")[0];
     ctx.drawImage(img, 0, 0, 500, 500);
+
+    $.each(players, function (key, value) {
+        $('#players-list').append('<div id="paler" + key + "-frame"' +
+            ' class="Player-Frame-Class">' +
+            '<div id="player" + key + "-name" class="player-name">' + key + '</div>' +
+            '<div id="player" + key + "-score" class="player-score">0</div>' +
+            '</div>'
+            );
+    })
 });
 
 // on load of page

@@ -34,7 +34,6 @@ app.get('/users', user.list);
 server.listen(app.get('port'), function () {
     console.log('Express server listening on port ' + app.get('port'));
 });
-
 // usernames which are currently connected to the chat
 var usernames = {};
 var actualRoom = 0;
@@ -101,8 +100,8 @@ io.sockets.on('connection', function (socket) {
         socket.emit('updateRooms', roomMessage);
 
         if(howMuchUsers(roomUsers[user.room]) === 5){
-            socket.broadcast.to(user.room).emit('startGame');
-            socket.emit('startGame');
+            socket.broadcast.to(user.room).emit('startGame', roomUsers[user.room] );
+            socket.emit('startGame', roomUsers[user.room] );
         }
 
 
