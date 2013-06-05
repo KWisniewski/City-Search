@@ -33,7 +33,7 @@ socket.on('startGame', function(players){
     var ctx, img, c=$("#map-canvas")[0];
     ctx=c.getContext("2d");
     img=$("#map-image")[0];
-    ctx.drawImage(img, 0, 0, 500, 500);
+    ctx.drawImage(img, 0, 0, 600, 600);
 
     $.each(players, function (key, value) {
         $('#players-list').append('<div id="paler" + key + "-frame"' +

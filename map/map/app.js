@@ -99,7 +99,7 @@ io.sockets.on('connection', function (socket) {
         socket.broadcast.to(user.room).emit('updateRooms', roomMessage);
         socket.emit('updateRooms', roomMessage);
 
-        if(howMuchUsers(roomUsers[user.room]) === 5){
+        if(howMuchUsers(roomUsers[user.room]) === 2){
             socket.broadcast.to(user.room).emit('startGame', roomUsers[user.room] );
             socket.emit('startGame', roomUsers[user.room] );
         }

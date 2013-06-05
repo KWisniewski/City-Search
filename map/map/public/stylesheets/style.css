@@ -12,29 +12,29 @@ a {
 }
 
 .room{
-    border: outset;
+    border: double;
     text-align: center;
+    margin-bottom: 10%;
 }
 
 .Player-Frame-Class{
     height: 18%;
     width: 90%;
-    background-color: red;
-    margin-bottom: 5%;
+    margin-bottom: 20%;
 }
  .player-name{
      height: 45%;
      width: 95%;
-     background-color: green;
      margin-bottom: 2%;
      margin-left: 2%;
+     border: outset;
  }
  .player-score{
      height: 45%;
      width: 95%;
-     background-color: blue;
      margin-bottom: 2%;
      margin-left: 2%;
+     border: outset;
  }
 
  #players-list{
