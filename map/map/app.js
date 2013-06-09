@@ -11,6 +11,8 @@ var express = require('express')
 var app = express(),
     server = http.createServer(app),
     io = require('socket.io').listen(server);
+    cities = require('./citiesdata').citiesCoords;
+
 //oreo, oreo, oreo!
 // all environments
 app.set('port', process.env.PORT || 3000);
@@ -40,13 +42,37 @@ var actualRoom = 0;
 // rooms which are currently available in chat
 var rooms = ['room1', 'room2', 'room3'];
 var roomUsers = {};
+var selectRandomCity = function() {
+    var cityName = Object.keys(cities)[Math.round(0 +
+        (Object.keys(cities).length - 0) * Math.random()) % Object.keys(cities).length];
+    console.log(cityName);
+    return {name: cityName, coords: cities[cityName]};
+}
+
+var calculateDistanceBetweenPoints = function(usrX, usrY, cityX, cityY) {
+    var distance = 0;
+    if(usrX >= cityX && usrY >= cityY) {
+             distance = Math.round(Math.sqrt(Math.pow((usrX - cityX),2) + Math.pow((usrY - cityY),2)));
+    }
+    if(usrX <= cityX && usrY >= cityY) {
+        distance = Math.round(Math.sqrt(Math.pow((cityX - usrX),2) + Math.pow((usrY - cityY),2)));
+    }
+    if(usrX <= cityX && usrY <= cityY) {
+        distance = Math.round(Math.sqrt(Math.pow((cityX - usrX),2) + Math.pow((cityY - usrY),2)));
+    }
+    if(usrX >= cityX && usrY <= cityY) {
+        distance = Math.round(Math.sqrt(Math.pow((usrX - cityX),2) + Math.pow((cityY - usrY),2)));
+    }
+    return distance;
+}
 //oreo
 for(var i = 0; i < rooms.length; i+=1){
     roomUsers[rooms[i]] = {};
+    roomUsers[rooms[i]]['properties'] = {};
 }
 
 var howMuchUsers = function(obj){
-    return Object.keys(obj).length;
+    return Object.keys(obj).length - 1;
 };
 
 io.sockets.on('connection', function (socket) {
@@ -67,7 +93,7 @@ io.sockets.on('connection', function (socket) {
 
     // when the client emits 'adduser', this listens and executes
     socket.on('adduser', function (user) {
-
+        console.log('USER ->', user);
         var roomMessage = {};
 
         if(howMuchUsers(roomUsers[user.room]) >= 5){ // zrobic z tego for
@@ -96,31 +122,93 @@ io.sockets.on('connection', function (socket) {
         }
         console.log(roomMessage);
 
-        socket.broadcast.to(user.room).emit('updateRooms', roomMessage);
+        roomUsers[user.room][user.name].score = 0;
+        roomUsers[user.room]['properties'].round = 0;   //numer rundy w grze
+        roomUsers[user.room]['properties'].numOfPlayersSelections = 0;      //liczba graczy ktorzy wskazali juz wspolrzedne w danej rundzie
+
+        socket.broadcast.emit('updateRooms', roomMessage);
         socket.emit('updateRooms', roomMessage);
 
         if(howMuchUsers(roomUsers[user.room]) === 2){
-            socket.broadcast.to(user.room).emit('startGame', roomUsers[user.room] );
-            socket.emit('startGame', roomUsers[user.room] );
+            var selectedCity = selectRandomCity();
+            console.log("selected city to" + selectedCity);
+            roomUsers[user.room]['properties'].selectedCity = selectedCity;    //dodanie wylosowanego miasta do obiektu pokoju
+            console.log(selectedCity.name);
+            socket.broadcast.to(user.room).emit('startGame', roomUsers[user.room], selectedCity.name, roomUsers[user.room]['properties'].round );
+            socket.emit('startGame', roomUsers[user.room], selectedCity.name, roomUsers[user.room]['properties'].round );
         }
-
-
     });
 
 //    socket.emit('endGame');
-//
-//    socket.on('givePoints');
-//
+
+    socket.on('givePoints',function(userName, x, y, userRoom) {
+        console.log(userName + ' ' + x + ' ' + y);
+        roomUsers[userRoom][userName].x = x;
+        roomUsers[userRoom][userName].y = y;
+        roomUsers[userRoom]['properties'].numOfPlayersSelections++;
+        console.log("WSPOLRZEDNE X MIASTA" + roomUsers[userRoom]['properties'].selectedCity.coords.x);
+        roomUsers[userRoom][userName].score += calculateDistanceBetweenPoints(x, y, roomUsers[userRoom]['properties'].selectedCity.coords.x, roomUsers[userRoom]['properties'].selectedCity.coords.y );
+        if(roomUsers[userRoom]['properties'].numOfPlayersSelections === 2) { //jezeli wszyscy przesla swojewybrane koordynaty nastpeuje wyliczanie wyniku
+            roomUsers[userRoom]['properties'].round ++;
+            roomUsers[userRoom]['properties'].numOfPlayersSelections = 0;
+            var selectedCity = selectRandomCity();
+            roomUsers[userRoom]['properties'].selectedCity = selectedCity;
+            if(roomUsers[userRoom]['properties'].round < 2) {
+            socket.broadcast.to(userRoom).emit('nextRound', roomUsers[userRoom], selectedCity.name, roomUsers[userRoom]['properties'].round );
+            socket.emit('nextRound', roomUsers[userRoom], selectedCity.name, roomUsers[userRoom]['properties'].round );
+            } else {
+                //usuwanie wszystkich property z danego popju
+                console.log("===================================================================");
+                var winnerscore = roomUsers[userRoom][userName].score,
+                winnerName = "";
+
+                for (var key in roomUsers[userRoom]) {
+                    if(key !== 'properties' && roomUsers[userRoom][key].score <= winnerscore){
+                        winnerscore = roomUsers[userRoom][key].score;
+                        winnerName = key;
+                    }
+                }
+
+                for (var key in roomUsers[userRoom]) {
+                    if(key !== 'properties'){
+                        delete roomUsers[userRoom][key];
+                    } else {
+                        roomUsers[userRoom]['properties'] = {};
+                    }
+                }
+
+                console.log('============== WINNER ==============');
+                console.log(winnerName);
+                socket.broadcast.to(userRoom).emit('endGame', winnerName);
+                socket.emit('endGame', winnerName);
+
+            }
+        }
+    });
+
+    socket.on('removeUsersFromGroup', function(userRoom) {
+        console.log('=========== clean ============');
+        console.log(roomUsers);
+
+        var roomMessage = {};
+
+        for(var i = 0; i < rooms.length; i+=1){
+            roomMessage[rooms[i]] = howMuchUsers(roomUsers[rooms[i]]);
+        }
+        console.log(roomMessage);
+
+        socket.broadcast.emit('updateRooms', roomMessage);
+        socket.emit('updateRooms', roomMessage);
+        socket.leave(userRoom);
+    });
+
+
 //    socket.on('sumPoints');
 //
 //    socket.on('coorPointed');
 
 //    socket.broadcast.to(user.room).emit('Winner', roomMessage);
 //    socket.emit('Winner');
-
-
-
-
 
     // when the user disconnects.. perform this
     socket.on('disconnect', function () {

@@ -11,10 +11,24 @@ a {
     display: none;
 }
 
+#selected-city-container {
+    height: 20px;
+    width: 80px;
+    background-color: #EFFBF8;
+    border-radius: 5px;
+    margin-left: 30%;
+    display: none;
+}
+
+#selected-city-name {
+    margin: auto;
+}
+
 .room{
     border: double;
     text-align: center;
     margin-bottom: 10%;
+    cursor: pointer;
 }
 
 .Player-Frame-Class{

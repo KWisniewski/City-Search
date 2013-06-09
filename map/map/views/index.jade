@@ -4,7 +4,9 @@ block content
   h1= title
   p Welcome to #{title}
 
-
+      div#selected-city-container
+        div#selected-city-name
+      div#round-counter
       div#players-list(style='float: right; width: 100px; border-right: 1px solid black; height: 300px; padding: 10px; overflow: scroll-y;')
         b PLAYERS
 
@@ -12,4 +14,4 @@ block content
         b ROOMS
         #rooms
         img#map-image(src='/images/Mapa_2.svg', alt='map')
-      canvas#map-canvas(width='800', height='700')
+      canvas#map-canvas(width='600', height='600')
